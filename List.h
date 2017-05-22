@@ -11,8 +11,6 @@
 #include <exception>
 #include <cstdlib>
 #include <iterator>
-#define CATCH_CONFIG_MAIN
-#include "Catch.hpp"
 //-----------------------------------------------------------------------------
 //	Class: List
 //	Title: List Class
@@ -87,7 +85,7 @@
 //            iterator operator++(int) -- post-increment
 //            iterator operator--(int) -- post-decrement
 // 
-//        Private Properties
+//        Protected Properties
 //            listelem* ptr -- current listelem or NULL
 //
 //   History Log:
@@ -105,9 +103,7 @@
 using namespace std;
 namespace HJ_ADT
 {
-	typedef int datatype;
-
-	template <typename T> 
+	template <typename datatype>
 	class CDLList
 	{
 	public:
@@ -121,22 +117,22 @@ namespace HJ_ADT
 		// destructor
 		~CDLList() { release(); }
 		// functions
-		virtual unsigned getSize() const { return m_size; }
-		virtual iterator begin() const { return head; }
-		virtual iterator end() const { return tail; }
+		unsigned getSize() const { return m_size; }
+		iterator begin() const { return head; }
+		iterator end() const { return tail; }
 		void push_front(datatype datum);
 		datatype pop_front();
 		void push_back(datatype datum);
 		datatype pop_back();
 		datatype& front() const { return head->data; }
 		datatype& back() const { return tail->data; }
-		bool empty()const { return head == nullptr || tail == nullptr; }
-		void release();
+		virtual bool empty()const { return head == nullptr || tail == nullptr; }
+		virtual void release();
 		//overloaded operator
 		CDLList operator=(const CDLList & rlist);
 		datatype& operator[](int index);
 		const datatype& operator[](int index) const;
-	private:
+	protected:
 		listelem *head;
 		listelem *tail;
 		unsigned m_size; // number of elements in the list 
@@ -146,7 +142,7 @@ namespace HJ_ADT
 			datatype data;
 			listelem *next;
 			listelem *prev;
-			listelem(datatype datum, listelem* p, listelem* n) 
+			listelem(datatype datum, listelem* p, listelem* n)
 				: data(datum), prev(p), next(n) {} // struct constructor
 		};
 		// scoped within class list !
@@ -161,16 +157,25 @@ namespace HJ_ADT
 			listelem* operator->() const { return ptr; }
 			datatype& operator*() const { return ptr->data; }
 			operator listelem*() const { return ptr; }
-		private:
+		protected:
 			listelem* ptr; //current listelem or nullptr
 		};
 	};
-	ostream& operator<<(ostream& sout, const CDLList<class T>& x);
-	//-----------------------------------------------------------------------------
-	// constructor
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	CDLList<T>::CDLList(size_t n_elements, datatype datum)
+	template<typename datatype>
+	ostream& operator<<(ostream& sout, const CDLList<datatype>& myList);
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			CDLList(size_t n_elements, datatype datum)
+	//		description:	Constructor that initializes class with size of
+	//						n_element and with datum for each element
+	//		calls:			push_front()
+	//		called by:		main()
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	CDLList<datatype>::CDLList(size_t n_elements, datatype datum)
 		:m_size(0), head(nullptr), tail(nullptr)
 	{
 		if (n_elements <= 0)
@@ -178,42 +183,81 @@ namespace HJ_ADT
 		for (size_t i = 0; i < n_elements; ++i)
 			push_front(datum);
 	}
-	//-----------------------------------------------------------------------------
-	// copy constructor
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	CDLList<T>::CDLList(const CDLList& myList)
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			CDLList(const CDLList& myList)
+	//		description:	Copy Constructor to copy to new class
+	//		calls:			push_front()
+	//		called by:		n/a
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	CDLList<datatype>::CDLList(const CDLList& myList)
 		: m_size(0), head(nullptr), tail(nullptr)
 	{
-		CDLList<T>::iterator r_it = myList.begin();
+		CDLList<datatype>::iterator r_it = myList.begin();
 		while (r_it != nullptr)
 			push_front(*r_it++);
 	}
-	//-----------------------------------------------------------------------------
-	// constructor using iterators, copies from b to one before e
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	CDLList<T>::CDLList(iterator begin, iterator end)
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			CDLList(iterator begin, iterator end)
+	//		description:	Constructor using iterator
+	//		calls:			push_front()
+	//		called by:		n/a
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	CDLList<datatype>::CDLList(iterator begin, iterator end)
 		:m_size(0), head(nullptr), tail(nullptr)
 	{
 		while (begin != end)
 			push_front(*begin++);
 	}
-	//-----------------------------------------------------------------------------
-	// empties the list
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	void CDLList<T>::release()
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			release()
+	//		description:	release all contents of the list
+	//		calls:			pop_front()
+	//		called by:		~CDLList()
+	//						main()
+	//		parameters:		n/a
+	//		returns:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	void CDLList<datatype>::release()
 	{
-		while (head != nullptr)
+		listelem* current = tail;
+		listelem* temp;
+		head = nullptr;
+		while (current != nullptr) {
+			current = tail;
 			pop_front();
+			temp = current;
+			delete temp;
+		}
 	}
-
-	//-----------------------------------------------------------------------------
-	// insert element at front of list
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	void CDLList<T>::push_front(datatype datum)
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			push_front(datatype datum)
+	//		description:	pushes data in front of the list
+	//		calls:			empty()
+	//		called by:		constructor
+	//						main()
+	//						operator=()
+	//		parameters:		datatype datum -- data to be put in
+	//		returns:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	void CDLList<datatype>::push_front(datatype datum)
 	{
 		listelem* temp = new listelem(datum, tail, head);
 		m_size++;
@@ -226,11 +270,22 @@ namespace HJ_ADT
 		else
 			head = tail = temp;
 	}
-	//-----------------------------------------------------------------------------
-	// removes front element and returns the data from that element
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	datatype CDLList<T>::pop_front()
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			pop_front()
+	//		description:	remove front most data from the list
+	//		calls:			empty()
+	//						begin()
+	//		called by:		release()
+	//						main()
+	//
+	//		parameters:		n/a
+	//		returns:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	datatype CDLList<datatype>::pop_front()
 	{
 		if (head == nullptr)
 			throw runtime_error("empty list");
@@ -244,74 +299,115 @@ namespace HJ_ADT
 			head->prev = tail;
 			tail->next = head;
 		}
-		else
-			tail = nullptr; // empty at both ends
+		else {
+			head = tail = nullptr; // empty at both ends
+		}
 		return data;
 	}
-	//-----------------------------------------------------------------------------
-	// insert element at end of list
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	void CDLList<T>::push_back(datatype datum)
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			push_back(datatype datum)
+	//		description:	pushes data in back of the list
+	//		calls:			empty()
+	//		called by:		main()
+	//						
+	//		parameters:		datatype datum -- data to be put in
+	//		returns:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	void CDLList<datatype>::push_back(datatype datum)
 	{
-		
-			listelem* temp = new listelem(datum, tail, head); // takes data prev - tail
-			m_size++;										  // next - head
-			if (!empty())
-			{ // was a nonempty list
-				tail->next = temp;   // current tail's next is temp
-				head->prev = temp;	 // current head's prev is temp for circuly
-				tail = temp;
-			}
-			else
-				head = tail = temp;
+
+		listelem* temp = new listelem(datum, tail, head); // takes data prev - tail
+		m_size++;										  // next - head
+		if (!empty())
+		{ // was a nonempty list
+			tail->next = temp;   // current tail's next is temp
+			head->prev = temp;	 // current head's prev is temp for circuly
+			tail = temp;
+		}
+		else
+			head = tail = temp;
 	}
-	//-----------------------------------------------------------------------------
-	// removes end element and returns the data from that element
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	datatype CDLList<T>::pop_back()
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			pop_back()
+	//		description:	remove the last data of the list
+	//		calls:			empty()
+	//		called by:		main()
+	//						
+	//		parameters:		n/a
+	//		returns:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	datatype CDLList<datatype>::pop_back()
 	{//convert from front to back!
-		if (head == nullptr)
+		if (tail == nullptr)
 			throw runtime_error("empty list");
 		m_size--;
 		datatype data = tail->data; //save tail's data
 		iterator temp = end(); //temp = tail
-		temp--; //set iterator to previous
+		temp--;//set iterator to previous
 		delete tail;
 		tail = temp; // tail is now n-1
 		if (!empty()) {
 			head->prev = tail; //before head is tail
 			tail->next = head; //after tail is head
 		}
-		else
-			tail = nullptr; // empty at both ends
+		else {
+			head = tail = nullptr; // empty at both ends
+		}
 		return data;
 	}
-
-	//-----------------------------------------------------------------------------
-	// prints out a list
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	ostream& operator<<(ostream& sout, const CDLList<T>& myList)
+	//------------------------------------------------------------------------
+	//		method:			operator<<(ostream& sout, const 
+	//							CDLList<datatype>& myList)
+	//		description:	returns contents of the list to the ostream
+	//		calls:			end()
+	//						begin()
+	//		called by:		main()
+	//						
+	//		parameters:		ostream& sout -- stream to write to 
+	//						const CDLList<datatype>& myList -- List of data
+	//		returns:		ostream&
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	ostream& operator<<(ostream& sout, const CDLList<datatype>& myList)
 	{
-		list::iterator p = myList.begin();
+		CDLList<datatype>::iterator p = myList.begin();
+
 		sout << "(";
-		while (p != nullptr)
+		while (p != myList.end())
 		{
 			sout << *p;
 			if (p != myList.end())
 				sout << ",";
 			++p; // advances iterator using next
 		}
+		sout << *myList.end();
 		sout << ")\n";
+
 		return sout;
 	}
-	//-----------------------------------------------------------------------------
-	// returns a copy of rlist
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	CDLList<T> CDLList<T>::operator=(const CDLList & rlist)
+	//------------------------------------------------------------------------
+	//		class:			CDLList
+	//		method:			operator=(const CDLList & rlist)
+	//		description:	Override assignment operator for CDLList
+	//		calls:			push_front()
+	//		called by:		main()
+	//						operator <<()
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	CDLList<datatype> CDLList<datatype>::operator=(const CDLList & rlist)
 	{
 		if (&rlist != this)
 		{
@@ -322,22 +418,49 @@ namespace HJ_ADT
 		}
 		return *this;
 	}
-	//-----------------------------------------------------------------------------
-	// pre-increment
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	typename CDLList<T>::iterator CDLList<T>::iterator::operator++()
+	//------------------------------------------------------------------------
+	//		class:			CDLList::iterator
+	//		method:			operator++()
+	//		description:	pre increment the iterator by 1
+	//		calls:			n/a
+	//		called by:		constructor
+	//						push_front()
+	//						pop_front()
+	//						push_back()
+	//						operator=()
+	//						operator[]()
+	//						main()
+	//						operator <<()
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	typename CDLList<datatype>::iterator CDLList<datatype>::iterator::operator++()
 	{
 		if (ptr == nullptr)
 			throw runtime_error("nullptr pointer");
 		ptr = ptr->next;
 		return *this;
 	}
-	//-----------------------------------------------------------------------------
-	// post-increment
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	typename CDLList<T>::iterator CDLList<T>::iterator::operator++(int)
+	//------------------------------------------------------------------------
+	//		class:			CDLList::iterator
+	//		method:			operator++(int)
+	//		description:	post increment the iterator by 1
+	//		calls:			n/a
+	//		called by:		push_front()
+	//						pop_front()
+	//						push_back()
+	//						operator=()
+	//						operator[]()
+	//						main()
+	//						operator <<()
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	typename CDLList<datatype>::iterator CDLList<datatype>::iterator::operator++(int)
 	{
 		if (ptr == nullptr)
 			throw runtime_error("nullptr pointer");
@@ -345,31 +468,65 @@ namespace HJ_ADT
 		ptr = ptr->next;
 		return temp;
 	}
-	//-----------------------------------------------------------------------------
-	// pre-decrement
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	typename CDLList<T>::iterator CDLList<T>::iterator::operator--()
+	//------------------------------------------------------------------------
+	//		class:			CDLList::iterator
+	//		method:			operator--()
+	//		description:	pre decrement the iterator by 1
+	//		calls:			n/a
+	//		called by:		constructor
+	//						pop_front()
+	//						pop_back()
+	//						operator[]()
+	//						main()
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	typename CDLList<datatype>::iterator CDLList<datatype>::iterator::operator--()
 	{
-		// replace the dummy code below with your own
-		iterator temp = nullptr;
+		// dummy code has been replaced
+		if (ptr == nullptr)
+			throw runtime_error("nullptr pointer");
+		ptr = ptr->prev;
+		return *this;
+	}
+	//------------------------------------------------------------------------
+	//		class:			CDLList::iterator
+	//		method:			operator--(int)
+	//		description:	post decrement the iterator by 1
+	//		calls:			n/a
+	//		called by:		constructor
+	//						pop_front()
+	//						pop_back()
+	//						operator[]()
+	//						main()
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	typename CDLList<datatype>::iterator CDLList<datatype>::iterator::operator--(int)
+	{
+		if (ptr == nullptr)
+			throw runtime_error("nullptr pointer");
+		iterator temp = *this;
+		ptr = ptr->prev;
 		return temp;
 	}
-	//-----------------------------------------------------------------------------
-	// post-decrement
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	typename CDLList<T>::iterator CDLList<T>::iterator::operator--(int)
-	{
-		// replace the dummy code below with your own
-		iterator temp = nullptr;
-		return temp;
-	}
-	//-----------------------------------------------------------------------------
-	// [] operator -- l-value
-	//-----------------------------------------------------------------------------
-	template<typename T>
-	datatype& CDLList<T>::operator[](int index)
+	//------------------------------------------------------------------------
+	//		class:			CDLList::iterator
+	//		method:			operator[](int index)
+	//		description:	get the element at index l-value
+	//		calls:			end()
+	//						begin()
+	//		called by:		main()
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
+	template<typename datatype>
+	datatype& CDLList<datatype>::operator[](int index)
 	{
 		iterator it;
 		if (index >= 0)
@@ -390,12 +547,20 @@ namespace HJ_ADT
 		}
 		return *it;
 	}
-	//-----------------------------------------------------------------------------
-	// [] operator -- r-value
-	//-----------------------------------------------------------------------------
+	//------------------------------------------------------------------------
+	//		class:			CDLList::iterator
+	//		method:			operator[](int index)
+	//		description:	get the element at index r-value
+	//		calls:			end()
+	//						begin()
+	//		called by:		main()
+	//		parameters:		n/a
+	//		History Log:
+	//						5/21/2017 HJ completed version 1.0
+	// -----------------------------------------------------------------------
 
-	template<typename T>
-	const datatype& CDLList<T>::operator[](int index)const
+	template<typename datatype>
+	const datatype& CDLList<datatype>::operator[](int index)const
 	{
 		iterator it;
 		if (index >= 0)

@@ -142,7 +142,6 @@
     <ClCompile Include="DoublyListDriver.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Catch.hpp" />
     <ClInclude Include="Queue.h" />
     <ClInclude Include="List.h" />
   </ItemGroup>
